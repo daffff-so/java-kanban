@@ -14,15 +14,15 @@ public class Task {
         this.status = status;
      }
 
-     public void setId(int id) {
-        if (this.id == 0 && id > 0) {
-            this.id = id;
-        }
-     }
-
      public String getName() {
          return name;
      }
+
+    public void setId(int id) {
+        if (this.id == 0 && id > 0) {
+            this.id = id;
+        }
+    }
 
      public int getId() {
          return id;
@@ -35,6 +35,10 @@ public class Task {
      public Status getStatus() {
          return status;
      }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
 
     @Override
     public String toString() {
