@@ -4,13 +4,16 @@ import model.Task;
 import model.Epic;
 import model.Subtask;
 import model.Status;
+import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
 import java.util.ArrayList;
 
 public class TaskManager {
-    private HashMap<Integer, Task> tasks = new HashMap<>();
-    private HashMap<Integer, Epic> epics = new HashMap<>();
-    private HashMap<Integer, Subtask> subtasks = new HashMap<>();
+    private final Map<Integer, Task> tasks = new HashMap<>();
+    private final Map<Integer, Epic> epics = new HashMap<>();
+    private final Map<Integer, Subtask> subtasks = new HashMap<>();
+
 
     private int nextId = 1;
 
@@ -22,7 +25,7 @@ public class TaskManager {
         Epic epic = epics.get(epicId);
         if (epic == null) return;
 
-        ArrayList<Subtask> subs = getSubtasksOfEpic(epicId);
+        List<Subtask> subs = getSubtasksOfEpic(epicId);
 
         if (subs.isEmpty()) {
             epic.setStatus(Status.NEW);
@@ -55,7 +58,8 @@ public class TaskManager {
         return tasks.get(id);
     }
 
-    public ArrayList<Task> getAllTasks() {
+    public List<Task> getAllTasks() {
+
         return new ArrayList<>(tasks.values());
     }
 
@@ -87,7 +91,8 @@ public class TaskManager {
         return epics.get(id);
     }
 
-    public ArrayList<Epic> getAllEpics() {
+    public List<Epic> getAllEpics() {
+
         return new ArrayList<>(epics.values());
     }
 
@@ -134,10 +139,12 @@ public class TaskManager {
     }
 
     public Subtask getSubtaskById(int id) {
+
         return subtasks.get(id);
     }
 
-    public ArrayList<Subtask> getAllSubtasks() {
+    public List<Subtask> getAllSubtasks() {
+
         return new ArrayList<>(subtasks.values());
     }
 
@@ -175,8 +182,8 @@ public class TaskManager {
         }
     }
 
-    public ArrayList<Subtask> getSubtasksOfEpic(int epicId) {
-        ArrayList<Subtask> result = new ArrayList<>();
+    public List<Subtask> getSubtasksOfEpic(int epicId) {
+        List<Subtask> result = new ArrayList<>();
         Epic epic = epics.get(epicId);
         if (epic == null) return result;
 

@@ -3,20 +3,24 @@ package model;
 import java.util.Objects;
 
 public class Task {
-     private int id;
-     private String name;
-     private String description;
-     private Status status;
+    private int id;
+    private String name;
+    private String description;
+    private Status status;
 
-     public Task(String name, String description, Status status) {
+    public Task(String name, String description, Status status) {
         this.name = name;
         this.description = description;
         this.status = status;
-     }
+    }
 
-     public String getName() {
-         return name;
-     }
+    public TaskType getType() {
+        return TaskType.TASK;
+    }
+
+    public String getName() {
+        return name;
+    }
 
     public void setId(int id) {
         if (this.id == 0 && id > 0) {
@@ -24,17 +28,17 @@ public class Task {
         }
     }
 
-     public int getId() {
-         return id;
-     }
+    public int getId() {
+        return id;
+    }
 
-     public String getDescription() {
-         return description;
-     }
+    public String getDescription() {
+        return description;
+    }
 
-     public Status getStatus() {
-         return status;
-     }
+    public Status getStatus() {
+        return status;
+    }
 
     public void setStatus(Status status) {
         this.status = status;
@@ -42,24 +46,30 @@ public class Task {
 
     @Override
     public String toString() {
-        return "Task{" +
-                "status=" + status +
-                ", description='" + description + '\'' +
+        return getType() + "{" +
+                "id=" + id +
                 ", name='" + name + '\'' +
-                ", id=" + id +
+                ", description='" + description + '\'' +
+                ", status=" + status +
                 '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Task)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Task task = (Task) o;
-        return id == task.id;
+
+        return id != 0 && id == task.id;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return (id == 0) ? System.identityHashCode(this) : Objects.hash(id);
     }
 }
+
