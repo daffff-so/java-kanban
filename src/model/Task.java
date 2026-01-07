@@ -14,6 +14,13 @@ public class Task {
         this.status = status;
     }
 
+    public Task copy() {
+        Task task = new Task(name, description, status);
+        task.setId(id);
+        return task;
+    }
+
+
     public TaskType getType() {
         return TaskType.TASK;
     }

@@ -2,12 +2,15 @@ import model.Task;
 import model.Epic;
 import model.Subtask;
 import model.Status;
+import service.InMemoryTaskManager;
 import service.TaskManager;
+import service.Managers;
 
 
 public class Main {
     public static void main(String[] args) {
-        TaskManager manager = new TaskManager();
+        TaskManager manager = Managers.getDefault();
+
 
         /* по ТЗ не очень понятно, что именно нужно писать в мейн и нужно ли оставлять тут тесты, поэтому просто оформила
         здесь то, как проводила тесты */
@@ -32,25 +35,25 @@ public class Main {
         System.out.println("Подзадачи эпика e2: " + manager.getSubtasksOfEpic(e2.getId()));
 
         System.out.println("\nПРОВЕРЯЮ СТАТУСЫ ЭПИКОВ ПОСЛЕ СОЗДАНИЯ");
-        System.out.println("Эпик e1: " + manager.getEpicById(e1.getId())); // NEW
-        System.out.println("Эпик e2: " + manager.getEpicById(e2.getId())); // NEW
+        System.out.println("Эпик e1: " + manager.getEpic(e1.getId())); // NEW
+        System.out.println("Эпик e2: " + manager.getEpic(e2.getId())); // NEW
 
         System.out.println("\nМЕНЯЮ СТАТУСЫ ПОДЗАДАЧ И СМОТРЮ, КАК МЕНЯЕТСЯ ЭПИК");
 
         Subtask s11InProgress = new Subtask("Подзадача 1.1", "Сделать часть 1", Status.IN_PROGRESS, e1.getId());
         s11InProgress.setId(s11.getId());
         manager.updateSubtask(s11InProgress);
-        System.out.println("После s11=IN_PROGRESS, эпик e1: " + manager.getEpicById(e1.getId()));
+        System.out.println("После s11=IN_PROGRESS, эпик e1: " + manager.getEpic(e1.getId()));
 
         Subtask s12Done = new Subtask("Подзадача 1.2", "Сделать часть 2", Status.DONE, e1.getId());
         s12Done.setId(s12.getId());
         manager.updateSubtask(s12Done);
-        System.out.println("После s12=DONE, эпик e1: " + manager.getEpicById(e1.getId()));
+        System.out.println("После s12=DONE, эпик e1: " + manager.getEpic(e1.getId()));
 
         Subtask s11Done = new Subtask("Подзадача 1.1", "Сделать часть 1", Status.DONE, e1.getId());
         s11Done.setId(s11.getId());
         manager.updateSubtask(s11Done);
-        System.out.println("После s11=DONE, эпик e1: " + manager.getEpicById(e1.getId()));
+        System.out.println("После s11=DONE, эпик e1: " + manager.getEpic(e1.getId()));
 
         System.out.println("\nУДАЛЯЮ ОДНУ ЗАДАЧУ И ОДИН ЭПИК");
         manager.deleteTaskById(t2.getId());
