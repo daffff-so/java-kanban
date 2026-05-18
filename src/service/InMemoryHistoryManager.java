@@ -48,12 +48,12 @@ public class InMemoryHistoryManager implements HistoryManager {
 
         if (last == null) {
             first = newNode;
-            last = newNode;
         } else {
             last.next = newNode;
             newNode.prev = last;
-            last = newNode;
         }
+
+        last = newNode;
 
         return newNode;
     }
@@ -90,9 +90,6 @@ public class InMemoryHistoryManager implements HistoryManager {
         } else {
             next.prev = prev;
         }
-
-        node.prev = null;
-        node.next = null;
     }
 
     private static class Node {
