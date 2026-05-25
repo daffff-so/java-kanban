@@ -39,8 +39,6 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     }
 
     private String toString(Task task) {
-        TaskType type = getTaskType(task);
-
         String epicId = "";
 
         if (task instanceof Subtask) {
@@ -48,23 +46,11 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         }
 
         return task.getId() + ","
-                + type + ","
+                + task.getType() + ","
                 + task.getName() + ","
                 + task.getStatus() + ","
                 + task.getDescription() + ","
                 + epicId;
-    }
-
-    private TaskType getTaskType(Task task) {
-        if (task instanceof Epic) {
-            return TaskType.EPIC;
-        }
-
-        if (task instanceof Subtask) {
-            return TaskType.SUBTASK;
-        }
-
-        return TaskType.TASK;
     }
 
     @Override
@@ -153,14 +139,20 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
         Task task;
 
-        if (type == TaskType.TASK) {
-            task = new Task(name, description, status);
-        } else if (type == TaskType.EPIC) {
-            task = new Epic(name, description);
-            task.setStatus(status);
-        } else {
-            int epicId = Integer.parseInt(parts[5]);
-            task = new Subtask(name, description, status, epicId);
+        switch (type) {
+            case TASK:
+                task = new Task(name, description, status);
+                break;
+            case EPIC:
+                task = new Epic(name, description);
+                task.setStatus(status);
+                break;
+            case SUBTASK:
+                int epicId = Integer.parseInt(parts[5]);
+                task = new Subtask(name, description, status, epicId);
+                break;
+            default:
+                throw new IllegalArgumentException("Неизвестный тип задачи: " + type);
         }
 
         task.setId(id);
@@ -189,12 +181,18 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
                 Task task = fromString(line);
 
-                if (task.getType() == TaskType.TASK) {
-                    manager.restoreTask(task);
-                } else if (task.getType() == TaskType.EPIC) {
-                    manager.restoreEpic((Epic) task);
-                } else {
-                    manager.restoreSubtask((Subtask) task);
+                switch (task.getType()) {
+                    case TASK:
+                        manager.restoreTask(task);
+                        break;
+                    case EPIC:
+                        manager.restoreEpic((Epic) task);
+                        break;
+                    case SUBTASK:
+                        manager.restoreSubtask((Subtask) task);
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Неизвестный тип задачи: " + task.getType());
                 }
             }
 
