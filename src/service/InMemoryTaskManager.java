@@ -16,9 +16,9 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class InMemoryTaskManager implements TaskManager {
-    private final Map<Integer, Task> tasks = new HashMap<>();
-    private final Map<Integer, Epic> epics = new HashMap<>();
-    private final Map<Integer, Subtask> subtasks = new HashMap<>();
+    protected final Map<Integer, Task> tasks = new HashMap<>();
+    protected final Map<Integer, Epic> epics = new HashMap<>();
+    protected final Map<Integer, Subtask> subtasks = new HashMap<>();
 
     private int nextId = 1;
 
@@ -39,7 +39,7 @@ public class InMemoryTaskManager implements TaskManager {
         return historyManager.getHistory();
     }
 
-    private void updateEpicStatus(int epicId) {
+    protected void updateEpicStatus(int epicId) {
         Epic epic = epics.get(epicId);
         if (epic == null) return;
 
@@ -386,5 +386,33 @@ public class InMemoryTaskManager implements TaskManager {
             if (st != null) result.add(st);
         }
         return result;
+    }
+
+    protected void restoreTask(Task task) {
+        tasks.put(task.getId(), task);
+        updateNextId(task.getId());
+    }
+
+    protected void restoreEpic(Epic epic) {
+        epics.put(epic.getId(), epic);
+        updateNextId(epic.getId());
+    }
+
+    protected void restoreSubtask(Subtask subtask) {
+        subtasks.put(subtask.getId(), subtask);
+
+        Epic epic = epics.get(subtask.getEpicId());
+        if (epic != null) {
+            epic.addSubtaskId(subtask.getId());
+            updateEpicStatus(epic.getId());
+        }
+
+        updateNextId(subtask.getId());
+    }
+
+    private void updateNextId(int id) {
+        if (id >= nextId) {
+            nextId = id + 1;
+        }
     }
 }
