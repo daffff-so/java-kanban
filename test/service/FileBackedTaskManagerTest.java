@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class FileBackedTaskManagerTest {
@@ -94,4 +97,60 @@ class FileBackedTaskManagerTest {
         assertEquals(2, newTask.getId());
     }
 
+    @Test
+    void shouldSaveAndLoadTaskWithDurationAndStartTime() throws IOException {
+        File file = File.createTempFile("tasks", ".csv");
+        FileBackedTaskManager manager = new FileBackedTaskManager(file);
+
+        Task task = new Task(
+                "Task 1",
+                "Description 1",
+                Status.NEW,
+                Duration.ofMinutes(45),
+                LocalDateTime.of(2024, 1, 1, 10, 0)
+        );
+
+        manager.createTask(task);
+
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
+
+        Task loadedTask = loadedManager.getTask(task.getId());
+
+        assertEquals(task.getDuration(), loadedTask.getDuration());
+        assertEquals(task.getStartTime(), loadedTask.getStartTime());
+        assertEquals(task.getEndTime(), loadedTask.getEndTime());
+    }
+
+    @Test
+    void shouldSaveAndLoadSubtaskWithDurationAndStartTime() throws IOException {
+        File file = File.createTempFile("tasks", ".csv");
+        FileBackedTaskManager manager = new FileBackedTaskManager(file);
+
+        Epic epic = new Epic("Epic 1", "Description 1");
+        manager.createEpic(epic);
+
+        Subtask subtask = new Subtask(
+                "Subtask 1",
+                "Description 1",
+                Status.NEW,
+                epic.getId(),
+                Duration.ofMinutes(30),
+                LocalDateTime.of(2024, 1, 1, 12, 0)
+        );
+
+        manager.createSubtask(subtask);
+
+        FileBackedTaskManager loadedManager = FileBackedTaskManager.loadFromFile(file);
+
+        Subtask loadedSubtask = loadedManager.getSubtask(subtask.getId());
+        Epic loadedEpic = loadedManager.getEpic(epic.getId());
+
+        assertEquals(subtask.getDuration(), loadedSubtask.getDuration());
+        assertEquals(subtask.getStartTime(), loadedSubtask.getStartTime());
+        assertEquals(subtask.getEndTime(), loadedSubtask.getEndTime());
+
+        assertEquals(Duration.ofMinutes(30), loadedEpic.getDuration());
+        assertEquals(LocalDateTime.of(2024, 1, 1, 12, 0), loadedEpic.getStartTime());
+        assertEquals(LocalDateTime.of(2024, 1, 1, 12, 30), loadedEpic.getEndTime());
+    }
 }

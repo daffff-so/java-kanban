@@ -11,6 +11,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class FileBackedTaskManager extends InMemoryTaskManager {
     private final File file;
 
@@ -20,7 +23,7 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     private void save() {
         try (FileWriter writer = new FileWriter(file)) {
-            writer.write("id,type,name,status,description,epic\n");
+            writer.write("id,type,name,status,description,epic,duration,startTime\n");
 
             for (Task task : getAllTasks()) {
                 writer.write(toString(task) + "\n");
@@ -45,12 +48,24 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
             epicId = String.valueOf(((Subtask) task).getEpicId());
         }
 
+        String duration = "";
+        if (task.getDuration() != null) {
+            duration = String.valueOf(task.getDuration().toMinutes());
+        }
+
+        String startTime = "";
+        if (task.getStartTime() != null) {
+            startTime = task.getStartTime().toString();
+        }
+
         return task.getId() + ","
                 + task.getType() + ","
                 + task.getName() + ","
                 + task.getStatus() + ","
                 + task.getDescription() + ","
-                + epicId;
+                + epicId + ","
+                + duration + ","
+                + startTime;
     }
 
     @Override
@@ -137,19 +152,31 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         Status status = Status.valueOf(parts[3]);
         String description = parts[4];
 
+        Duration duration = Duration.ZERO;
+        if (parts.length > 6 && !parts[6].isEmpty()) {
+            duration = Duration.ofMinutes(Long.parseLong(parts[6]));
+        }
+
+        LocalDateTime startTime = null;
+        if (parts.length > 7 && !parts[7].isEmpty()) {
+            startTime = LocalDateTime.parse(parts[7]);
+        }
+
         Task task;
 
         switch (type) {
             case TASK:
-                task = new Task(name, description, status);
+                task = new Task(name, description, status, duration, startTime);
                 break;
             case EPIC:
                 task = new Epic(name, description);
                 task.setStatus(status);
+                task.setDuration(duration);
+                task.setStartTime(startTime);
                 break;
             case SUBTASK:
                 int epicId = Integer.parseInt(parts[5]);
-                task = new Subtask(name, description, status, epicId);
+                task = new Subtask(name, description, status, epicId, duration, startTime);
                 break;
             default:
                 throw new IllegalArgumentException("Неизвестный тип задачи: " + type);

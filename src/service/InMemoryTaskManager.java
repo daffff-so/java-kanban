@@ -391,6 +391,7 @@ public class InMemoryTaskManager implements TaskManager {
     protected void restoreTask(Task task) {
         tasks.put(task.getId(), task);
         updateNextId(task.getId());
+        addToPrioritizedTasks(task);
     }
 
     protected void restoreEpic(Epic epic) {
@@ -400,11 +401,13 @@ public class InMemoryTaskManager implements TaskManager {
 
     protected void restoreSubtask(Subtask subtask) {
         subtasks.put(subtask.getId(), subtask);
+        addToPrioritizedTasks(subtask);
 
         Epic epic = epics.get(subtask.getEpicId());
         if (epic != null) {
             epic.addSubtaskId(subtask.getId());
             updateEpicStatus(epic.getId());
+            updateEpicTime(epic.getId());
         }
 
         updateNextId(subtask.getId());
