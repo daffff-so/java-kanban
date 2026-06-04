@@ -2,6 +2,7 @@ package service;
 
 import model.Status;
 import model.Task;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -10,19 +11,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class InMemoryHistoryManagerTest {
 
-    @Test
-    void historyShouldKeepOnlyLast10() {
-        HistoryManager history = Managers.getDefaultHistory();
+    private HistoryManager historyManager;
 
+    @BeforeEach
+    void setUp() {
+        historyManager = Managers.getDefaultHistory();
+    }
+
+    @Test
+    void historyShouldBeUnlimited() {
         for (int i = 1; i <= 11; i++) {
-            Task t = new Task("t" + i, "d" + i, Status.NEW);
-            t.setId(i);
-            history.add(t);
+            Task task = new Task("Task " + i, "Description " + i, Status.NEW);
+            task.setId(i);
+            historyManager.add(task);
         }
 
-        List<Task> h = history.getHistory();
-        assertEquals(10, h.size());
-        assertEquals(2, h.get(0).getId());
-        assertEquals(11, h.get(9).getId());
+        List<Task> history = historyManager.getHistory();
+
+        assertEquals(11, history.size());
     }
 }

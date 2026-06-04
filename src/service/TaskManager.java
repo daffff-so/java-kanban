@@ -15,6 +15,8 @@ public interface TaskManager {
 
     List<Task> getHistory();
 
+    List<Task> getPrioritizedTasks();
+
     void updateTask(Task task);
 
     void deleteTaskById(int id);
