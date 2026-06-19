@@ -8,6 +8,13 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class InMemoryTaskManager implements TaskManager {
     private final Map<Integer, Task> tasks = new HashMap<>();
@@ -23,9 +30,54 @@ public class InMemoryTaskManager implements TaskManager {
         return nextId++;
     }
 
+    private final Set<Task> prioritizedTasks = new TreeSet<>(
+            Comparator.comparing(Task::getStartTime)
+                    .thenComparing(Task::getId)
+    );
+
     @Override
     public List<Task> getHistory() {
         return historyManager.getHistory();
+    }
+
+    @Override
+    public List<Task> getPrioritizedTasks() {
+        return new ArrayList<>(prioritizedTasks);
+    }
+
+    private void addToPrioritizedTasks(Task task) {
+        if (task.getStartTime() != null) {
+            prioritizedTasks.add(task);
+        }
+    }
+
+    private void removeFromPrioritizedTasks(Task task) {
+        if (task != null && task.getStartTime() != null) {
+            prioritizedTasks.remove(task);
+        }
+    }
+
+    private boolean isTasksOverlap(Task task1, Task task2) {
+        if (task1.getStartTime() == null || task2.getStartTime() == null) {
+            return false;
+        }
+
+        if (task1.getEndTime() == null || task2.getEndTime() == null) {
+            return false;
+        }
+
+        return task1.getStartTime().isBefore(task2.getEndTime())
+                && task2.getStartTime().isBefore(task1.getEndTime());
+    }
+
+    private boolean hasTimeOverlap(Task task) {
+        if (task.getStartTime() == null) {
+            return false;
+        }
+
+        return prioritizedTasks.stream()
+                .filter(existingTask -> existingTask.getId() != task.getId())
+                .anyMatch(existingTask -> isTasksOverlap(existingTask, task));
     }
 
     private void updateEpicStatus(int epicId) {
@@ -56,9 +108,14 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public Task createTask(Task task) {
+        if (hasTimeOverlap(task)) {
+            return null;
+        }
+
         int id = generateId();
         task.setId(id);
         tasks.put(id, task);
+        addToPrioritizedTasks(task);
         return task;
     }
 
@@ -142,13 +199,49 @@ public class InMemoryTaskManager implements TaskManager {
         subtasks.clear();
     }
 
+    private void updateEpicTime(int epicId) {
+        Epic epic = epics.get(epicId);
+
+        if (epic == null) {
+            return;
+        }
+
+        List<Subtask> subs = getSubtasksOfEpic(epicId);
+
+        Duration duration = subs.stream()
+                .map(Subtask::getDuration)
+                .filter(Objects::nonNull)
+                .reduce(Duration.ZERO, Duration::plus);
+
+        LocalDateTime startTime = subs.stream()
+                .map(Subtask::getStartTime)
+                .filter(Objects::nonNull)
+                .min(LocalDateTime::compareTo)
+                .orElse(null);
+
+        LocalDateTime endTime = subs.stream()
+                .map(Subtask::getEndTime)
+                .filter(Objects::nonNull)
+                .max(LocalDateTime::compareTo)
+                .orElse(null);
+
+        epic.setDuration(duration);
+        epic.setStartTime(startTime);
+        epic.setEndTime(endTime);
+    }
+
     //SUBTASKS methods
 
     @Override
     public Subtask createSubtask(Subtask subtask) {
         int epicId = subtask.getEpicId();
         Epic epic = epics.get(epicId);
+
         if (epic == null) {
+            return null;
+        }
+
+        if (hasTimeOverlap(subtask)) {
             return null;
         }
 
@@ -157,8 +250,11 @@ public class InMemoryTaskManager implements TaskManager {
 
         subtasks.put(id, subtask);
         epic.addSubtaskId(id);
+        addToPrioritizedTasks(subtask);
 
         updateEpicStatus(epicId);
+        updateEpicTime(epicId);
+
         return subtask;
     }
 
